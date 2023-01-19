@@ -1,14 +1,17 @@
 bl_info = {
     "name": "PosePipe",
-    "author": "ZonkoSoft, SpectralVectors",
-    "version": (0, 8, 2),
+    "author": "ZonkoSoft, SpectralVectors, TwoOneOne",
+    "version": (0, 8, 3),
     "blender": (2, 80, 0),
     "location": "3D View > Sidebar > PosePipe",
     "description": "Motion capture using your camera!",
     "category": "3D View",
+    "wiki_url": "https://github.com/SpectralVectors/PosePipe/wiki",
+    "tracker_url": "https://github.com/SpectralVectors/PosePipe/issues"
 }
 
-
+import pip
+import pkg_resources
 import bpy
 from bpy.types import Panel, Operator, PropertyGroup, FloatProperty, PointerProperty
 from bpy.utils import register_class, unregister_class
@@ -28,41 +31,40 @@ bone_translate = {
 }
 
 body_names = [
-"00 nose",
-"01 left eye (inner)",
-"02 left eye",
-"03 left eye (outer)",
-"04 right eye (inner)",
-"05 right eye",
-"06 right eye (outer)",
-"07 left ear",
-"08 right ear",
-"09 mouth (left)",
-"10 mouth (right)",
-"11 left shoulder",
-"12 right shoulder",
-"13 left elbow",
-"14 right elbow",
-"15 left wrist",
-"16 right wrist",
-"17 left pinky",
-"18 right pinky",
-"19 left index",
-"20 right index",
-"21 left thumb",
-"22 right thumb",
-"23 left hip",
-"24 right hip",
-"25 left knee",
-"26 right knee",
-"27 left ankle",
-"28 right ankle",
-"29 left heel",
-"30 right heel",
-"31 left foot index",
-"32 right foot index",
+    "00 nose",
+    "01 left eye (inner)",
+    "02 left eye",
+    "03 left eye (outer)",
+    "04 right eye (inner)",
+    "05 right eye",
+    "06 right eye (outer)",
+    "07 left ear",
+    "08 right ear",
+    "09 mouth (left)",
+    "10 mouth (right)",
+    "11 left shoulder",
+    "12 right shoulder",
+    "13 left elbow",
+    "14 right elbow",
+    "15 left wrist",
+    "16 right wrist",
+    "17 left pinky",
+    "18 right pinky",
+    "19 left index",
+    "20 right index",
+    "21 left thumb",
+    "22 right thumb",
+    "23 left hip",
+    "24 right hip",
+    "25 left knee",
+    "26 right knee",
+    "27 left ankle",
+    "28 right ankle",
+    "29 left heel",
+    "30 right heel",
+    "31 left foot index",
+    "32 right foot index",
 ]
-
 
 def do_assign(left, leftKey, centerKey, right, rightKey = None):
     success = True
@@ -75,41 +77,6 @@ def do_assign(left, leftKey, centerKey, right, rightKey = None):
         success = False
         logging.error(traceback.format_exc())
     return success
-
-def install():
-    """ Install MediaPipe and dependencies behind the scenes """
-    import subprocess
-    import sys
-
-    string = bpy.app.version_string
-    blenderversion = string.rstrip(string[-2:])
-    
-    subprocess.check_call([
-        sys.executable, 
-        "-m", "ensurepip"])
-
-    subprocess.check_call([
-        sys.executable, 
-        "-m", "pip", "install", "--upgrade", "pip"])
-
-    subprocess.check_call([
-        sys.executable, 
-        "-m", "pip", "install",
-        f"--target=C:\\Program Files\\Blender Foundation\\Blender {blenderversion}\\{blenderversion}\\python\\lib",
-        "opencv-python"])
-
-    subprocess.check_call([
-        sys.executable, 
-        "-m", "pip", "install",
-        f"--target=C:\\Program Files\\Blender Foundation\\Blender {blenderversion}\\{blenderversion}\\python\\lib", 
-        "mediapipe"])
-
-    subprocess.check_call([
-        sys.executable, 
-        "-m", "pip", "install",
-        f"--target=C:\\Program Files\\Blender Foundation\\Blender {blenderversion}\\{blenderversion}\\python\\lib", 
-        "protobuf==3.19.0", 
-        "--upgrade"])
 
 def body_setup():
     """ Setup tracking boxes for body tracking """
@@ -146,7 +113,6 @@ def body_setup():
 
     body = bpy.context.scene.objects["Body"]
     return body
-
 
 def hands_setup():
     """ Setup tracking boxes for hand tracking """
@@ -200,7 +166,6 @@ def hands_setup():
     hand_right = bpy.context.scene.objects["Hand Right"]
     pose.scale = (-1,1,1)
     return hand_left, hand_right
-
 
 def face_setup():
     """ Setup tracking boxes for face tracking """
@@ -287,15 +252,10 @@ def hands_delete():
         bpy.ops.object.delete()
 
 def run_full(file_path):
-    try:
-        import cv2
-        import mediapipe as mp
-    except Exception as e:
-        bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
-        install()
-        import cv2
-        import mediapipe as mp
-
+    import cv2
+    import mediapipe as mp
+    bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
+    
     settings = bpy.context.scene.settings
     mp_drawing = mp.solutions.drawing_utils
     mp_holistic = mp.solutions.holistic
@@ -432,7 +392,9 @@ def run_full(file_path):
                 mp_drawing.DrawingSpec(color=(0,128,0), thickness=1, circle_radius=2),
                 mp_drawing.DrawingSpec(color=(0,255,0), thickness=2, circle_radius=1),)
 
-            image = cv2.flip(image, 1)
+            #flip image only for webcamera
+            if file_path == "None":
+                image = cv2.flip(image, 1)
             
             currentTime = time.time()
             capture_fps = int(1 / (currentTime - previousTime))
@@ -492,7 +454,6 @@ def run_full(file_path):
     except:
         pass
 
-
 class RetimeAnimation(bpy.types.Operator):
     """Builds an armature to use with the mocap data"""
     bl_idname = "posepipe.retime_animation"
@@ -528,8 +489,6 @@ class RetimeAnimation(bpy.types.Operator):
         context.area.type = 'VIEW_3D'
         return{'FINISHED'}
 
-
-
 def draw_file_opener(self, context):
     layout = self.layout
     scn = context.scene
@@ -537,7 +496,6 @@ def draw_file_opener(self, context):
     row = col.row(align=True)
     row.prop(scn.settings, 'file_path', text='directory:')
     row.operator("something.identifier_selector", icon="FILE_FOLDER", text="")
-
 
 class RunFileSelector(Operator, ImportHelper):
     bl_idname = "something.identifier_selector"
@@ -549,7 +507,6 @@ class RunFileSelector(Operator, ImportHelper):
         run_full(file_dir)
         return{'FINISHED'}
 
-
 class RunOperator(Operator):
     """Tooltip"""
     bl_idname = "object.run_body_operator"
@@ -558,7 +515,6 @@ class RunOperator(Operator):
     def execute(self, context):
         run_full("None")
         return {'FINISHED'}
-
 
 class Settings(PropertyGroup):
     # Capture only body pose if True, otherwise capture hands, face and body
@@ -1333,7 +1289,6 @@ class PosePipePanel(Panel):
         split.label(text="to Exit", icon='EVENT_ESC')
         column.operator(RunFileSelector.bl_idname, text="Load Video File", icon='FILE_MOVIE')
 
-
         box = layout.box()
         column_flow = box.column_flow()
         column = column_flow.column(align=True)
@@ -1353,17 +1308,92 @@ class PosePipePanel(Panel):
         column.label(text="Edit Capture Data:", icon='MODIFIER_ON')
         column.operator(RetimeAnimation.bl_idname, text="Retime Animation", icon='MOD_TIME')
 
-
         box = layout.box()
         column_flow = box.column_flow()
         column = column_flow.column(align=True)
         column.label(text="Armature:", icon='BONE_DATA')
         column.operator(SkeletonBuilder.bl_idname, text="Generate Bones", icon='ARMATURE_DATA')
+
+# ----------------------------------------
+
+class Install():
+    def __init__(self):
+        pipInstalledModules = [p.project_name for p in pkg_resources.working_set]
         
+        for dep in depList.keys():
+            for item in pipInstalledModules:
+                if str(dep) in str(item):
+                    depList[dep] = True
+                    
+    def check(self):
+        valid = True
+        for key, value in depList.items():
+            if value == False:
+                valid = False
+                
+        return valid
+
+class PreUsagePanel(Panel):
+    bl_label = "PosePipe - Camera MoCap"
+    bl_category = "PosePipe"
+    bl_idname = "VIEW3D_PT_Pose"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+
+    def draw(self, context):
+
+        settings = context.scene.settings
+
+        layout = self.layout
         
+        #checks of libraries
+        box = layout.box()
+        column_flow = box.column_flow()
+        column = column_flow.column(align=True)
+        column.label(text="Dependencies check:", icon='MEMORY')
+                
+        for key, value in depList.items():
+            column.label(text=key, icon='CHECKBOX_HLT' if value else 'CHECKBOX_DEHLT')
+
+        column.operator(RunInstallDependences.bl_idname, icon='PLUGIN')        
+
+class RunInstallDependences(Operator):
+    bl_idname = "pip.dep"
+    bl_label = "Install dependencies"
+    bl_info = "This button run installer for needed dependencies to run this plugin."
+
+    def execute(self, context):
+        self.report({'INFO'}, f"Run pip for install dependencies")
         
+        for key, value in depList.items():
+            if value == False:
+                pip.main(['install', str(key)])
+                depList[key] = True
+
+        valid = Install().check()
+        self.report({'INFO'}, f"All installed")
+
+        if valid: 
+            for c in _classes: 
+                register_class(c)
+
+        return {'FINISHED'}
+
+# ----------------------------------------
+
+dependencesController = None
+depList = {
+    "opencv-python":False,
+    "mediapipe":False,
+    "protobuf":False
+}       
+
+_classesPre = [
+    PreUsagePanel,
+    RunInstallDependences,
+]
+
 _classes = [
-    Settings,
     PosePipePanel,
     RunOperator,
     RunFileSelector,
@@ -1371,16 +1401,24 @@ _classes = [
     RetimeAnimation,
 ]
 
-
 def register():
-    for c in _classes: register_class(c)
+    register_class(Settings)
+    
+    dependencesController = Install()
+    
+    if dependencesController.check():
+        for c in _classes: 
+            register_class(c)
+    else:
+        for c in _classesPre: 
+            register_class(c)
+    
     bpy.types.Scene.settings = bpy.props.PointerProperty(type=Settings)
-
-
+        
 def unregister():
-    for c in _classes: unregister_class(c)
+    for c in _classes: 
+        unregister_class(c)
     del bpy.types.Scene.settings
-
 
 if __name__ == "__main__":
     register()
