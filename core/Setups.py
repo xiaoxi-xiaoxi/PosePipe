@@ -78,7 +78,8 @@ def body_setup():
                     space.shading.color_type = 'OBJECT'
 
     scene_objects = [n for n in bpy.context.scene.objects.keys()]
-    setup = "Pose" in scene_objects
+    # setup = "Pose" in scene_objects
+    setup = "'GEO-vincent_body'" in scene_objects
 
     if not setup:
         bpy.ops.object.add(radius=0.1, type='EMPTY')
@@ -86,29 +87,34 @@ def body_setup():
         pose.name = "Pose"
         pose.scale = (-1,1,1)
 
-    pose = bpy.context.scene.objects["Pose"]
+    # pose = bpy.context.scene.objects["Pose"]
+    pose = bpy.context.scene.objects["RIG-Vincent"]
+    body = bpy.data.objects['GEO-vincent_body']
 
-    bpy.ops.object.add(radius=0.1, type='EMPTY')
-    body = bpy.context.active_object
-    body.name = "Body"
-    body.parent = pose
+    # bpy.ops.object.add(radius=0.1, type='EMPTY')
+    # body = bpy.context.active_object
+    # body.name = "Body"
+    # body.parent = pose
 
     for k in range(33):
         bpy.ops.mesh.primitive_cube_add()
         box = bpy.context.active_object
         box.name = body_names[k]
         box.scale = [0.003, 0.003, 0.003]
+        box.location = [0,0,0]
         box.parent = body
         box.color = (0,255,0,255)
 
-    body = bpy.context.scene.objects["Body"]
+    # body = bpy.context.scene.objects["Body"]
+    body = bpy.context.scene.objects["GEO-vincent_body"]
     return body
 
 def hands_setup():
     """ Setup tracking boxes for hand tracking """
 
     scene_objects = [n for n in bpy.context.scene.objects.keys()]
-    setup = "Pose" in scene_objects
+    # setup = "Pose" in scene_objects
+    setup = "RIG-Vincent" in scene_objects
 
     if not setup:
         bpy.ops.object.add(radius=0.1, type='EMPTY')
@@ -116,7 +122,8 @@ def hands_setup():
         pose.name = "Pose"
         pose.scale = (-1,1,1)
 
-    pose = bpy.context.scene.objects["Pose"]
+    # pose = bpy.context.scene.objects["Pose"]
+    pose = bpy.context.scene.objects["RIG-Vincent"]
 
     for area in bpy.context.screen.areas: 
         if area.type == 'VIEW_3D':
@@ -161,7 +168,8 @@ def face_setup():
     """ Setup tracking boxes for face tracking """
 
     scene_objects = [n for n in bpy.context.scene.objects.keys()]
-    setup = "Pose" in scene_objects
+    # setup = "Pose" in scene_objects
+    setup = "RIG-Vincent" in scene_objects
 
     if not setup:
         bpy.ops.object.add(radius=0.1, type='EMPTY')
@@ -169,7 +177,8 @@ def face_setup():
         pose.name = "Pose"
         pose.scale = (-1,1,1)
 
-    pose = bpy.context.scene.objects["Pose"]
+    # pose = bpy.context.scene.objects["Pose"]
+    pose = bpy.context.scene.objects["RIG-Vincent"]
 
     for area in bpy.context.screen.areas: 
         if area.type == 'VIEW_3D':
@@ -198,20 +207,30 @@ def face_setup():
 def body_delete():
     """ Deletes all objects associated with body capture """
     scene_objects = [n for n in bpy.context.scene.objects.keys()]
-    pose = bpy.context.scene.objects["Pose"]
+    # pose = bpy.context.scene.objects["Pose"]
+    pose = bpy.context.scene.objects["RIG-Vincent"]
 
-    if "Body" in scene_objects:
-        for c in bpy.context.scene.objects["Body"].children: 
-            if not len(bpy.context.scene.objects["Body"].children) == 0:
+    # if "Body" in scene_objects:
+    #     for c in bpy.context.scene.objects["Body"].children:
+    #         if not len(bpy.context.scene.objects["Body"].children) == 0:
+    #             bpy.data.objects[c.name].select_set(True)
+    #             bpy.ops.object.delete()
+    #     bpy.data.objects["Body"].select_set(True)
+    #     bpy.ops.object.delete()
+
+    if "GEO-vincent_body" in scene_objects:
+        for c in bpy.context.scene.objects["GEO-vincent_body"].children:
+            if not len(bpy.context.scene.objects["GEO-vincent_body"].children) == 0:
                 bpy.data.objects[c.name].select_set(True)
                 bpy.ops.object.delete()
-        bpy.data.objects["Body"].select_set(True)
+        bpy.data.objects["GEO-vincent_body"].select_set(True)
         bpy.ops.object.delete()
 
 def face_delete():
     """ Deletes all objects associated with face capture """
     scene_objects = [n for n in bpy.context.scene.objects.keys()]
-    pose = bpy.context.scene.objects["Pose"]
+    # pose = bpy.context.scene.objects["Pose"]
+    pose = bpy.context.scene.objects["RIG-Vincent"]
 
     if "Face" in scene_objects:
         for c in  bpy.context.scene.objects["Face"].children:
@@ -224,7 +243,8 @@ def face_delete():
 def hands_delete():
     """ Deletes all objects associated with hands capture """
     scene_objects = [n for n in bpy.context.scene.objects.keys()]
-    pose = bpy.context.scene.objects["Pose"]
+    # pose = bpy.context.scene.objects["Pose"]
+    pose = bpy.context.scene.objects["RIG-Vincent"]
     if "Hand Left" in scene_objects:
         for c in  bpy.context.scene.objects["Hand Left"].children:
             if not len(bpy.context.scene.objects["Hand Left"].children) == 0:
